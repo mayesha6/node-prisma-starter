@@ -3,9 +3,9 @@ import httpStatus from "http-status-codes";
 import type { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
-import { IsActive } from "../modules/user/user.interface";
 import { verifyToken } from "../utils/jwt";
-import { prisma } from "../lib/prisma";
+import prisma from "../lib/prisma";
+import { IsActive } from "@prisma/client";
 
 export const checkAuth = (...authRoles: string[]) => async (req: Request, res: Response, next: NextFunction) => {
 

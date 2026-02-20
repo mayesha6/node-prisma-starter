@@ -1,7 +1,7 @@
 import bcryptjs from "bcryptjs";
 import { envVars } from "../config/env";
-import { Role } from "../modules/user/user.interface";
-import { prisma } from "../lib/prisma";
+import prisma from "../lib/prisma";
+import { UserRole } from "@prisma/client";
 
 export const seedSuperAdmin = async () => {
   try {
@@ -24,12 +24,10 @@ export const seedSuperAdmin = async () => {
     const superadmin = await prisma.user.create({
       data: {
         name: "Super admin",
-        role: Role.SUPER_ADMIN,
+        role: UserRole.SUPER_ADMIN,
         email: envVars.SUPER_ADMIN_EMAIL,
         password: hashedPassword,
         isVerified: true,
-        storageUsed: 0,
-        storageLimit: 0,
         auths: {
           create: [
             {

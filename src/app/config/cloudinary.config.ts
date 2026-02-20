@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 import stream from "stream";
 import AppError from "../errorHelpers/AppError";
 import { envVars } from "./env";
