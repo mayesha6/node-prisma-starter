@@ -3,8 +3,8 @@ import { Server } from "http";
 import app from "./app";
 import { envVars } from "./app/config/env";
 import { connectRedis } from "./app/config/redis.config";
-// import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
-import { prisma } from "./app/lib/prisma";
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
+import prisma from "./app/lib/prisma";
 
 let server: Server;
 
@@ -27,7 +27,7 @@ const startServer = async () => {
   try {
     await connectRedis();
     await startServer();
-    // await seedSuperAdmin();
+    await seedSuperAdmin();
   } catch (error) {
     console.log("Startup error:", error);
     process.exit(1);
