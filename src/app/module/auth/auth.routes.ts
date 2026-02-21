@@ -15,6 +15,9 @@ router.post("/set-password", checkAuth(...Object.values(UserRole)), AuthControll
 router.post("/forgot-password", AuthControllers.forgotPassword)
 router.post("/reset-password", checkAuth(...Object.values(UserRole)), AuthControllers.resetPassword)
 
+router.post("/signup/send-otp", AuthControllers.sendSignupOtp);
+router.post("/signup/verify-otp", AuthControllers.verifySignupOtp);
+
 router.get("/google", async (req: Request, res: Response, next: NextFunction) => {
     const redirect = req.query.redirect || "/"
     passport.authenticate("google", { scope: ["profile", "email"], state: redirect as string })(req, res, next)

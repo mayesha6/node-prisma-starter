@@ -14,7 +14,6 @@ const generateOtp = (length = 6) => {
 }
 
 
-
 const verifyResetOtp = async (email: string, otp: string) => {
   const redisKey = `otp:reset:${email}`;
 

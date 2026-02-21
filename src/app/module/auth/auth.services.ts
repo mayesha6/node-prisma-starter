@@ -9,6 +9,13 @@ import { createNewAccessTokenWithRefreshToken } from "../../utils/userTokens";
 import prisma from "../../lib/prisma";
 import { redisClient } from "../../config/redis.config";
 import { IsActive, AuthProvider } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+interface ISignupPayload {
+  email: string;
+  otp: string;
+}
 
 const getNewAccessToken = async (refreshToken: string) => {
   const newAccessToken =
@@ -20,21 +27,30 @@ const getNewAccessToken = async (refreshToken: string) => {
 };
 
 const resetPassword = async (
-  payload: Record<string, any>,
-  decodedToken: JwtPayload
+  token: string,
+  newPassword: string
 ) => {
-  if (payload.id !== decodedToken.userId) {
-    throw new AppError(401, "You can not reset your password");
+  let decoded;
+
+  try {
+    decoded = jwt.verify(
+      token,
+      envVars.JWT_ACCESS_SECRET
+    ) as jwt.JwtPayload;
+  } catch (err) {
+    throw new AppError(401, "Invalid or expired reset token");
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: decodedToken.userId },
+    where: { id: decoded.userId },
   });
 
-  if (!user) throw new AppError(401, "User does not exist");
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
 
-  const hashedPassword = await bcryptjs.hash(
-    payload.newPassword,
+  const hashedPassword = await bcrypt.hash(
+    newPassword,
     Number(envVars.BCRYPT_SALT_ROUND)
   );
 
@@ -42,6 +58,10 @@ const resetPassword = async (
     where: { id: user.id },
     data: { password: hashedPassword },
   });
+
+  return {
+    message: "Password reset successfully",
+  };
 };
 
 const forgotPassword = async (email: string) => {
@@ -88,6 +108,93 @@ const forgotPassword = async (email: string) => {
       otp,
     },
   });
+};
+
+const sendSignupOtp = async (email: string) => {
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser && existingUser.isVerified) {
+    throw new AppError(400, "User already exists and verified");
+  }
+
+  const redisKey = `otp:signup:${email}`;
+
+  const existingOtp = await redisClient.get(redisKey);
+  if (existingOtp) {
+    throw new AppError(429, "OTP already sent. Please wait 2 minutes.");
+  }
+
+  const generateOtp = (length = 6) => {
+    return crypto
+      .randomInt(10 ** (length - 1), 10 ** length)
+      .toString();
+  };
+
+  const otp = generateOtp();
+
+  await redisClient.set(redisKey, otp, {
+    expiration: { type: "EX", value: 120 },
+  });
+
+  await sendEmail({
+    to: email,
+    subject: "Verify Your Account",
+    templateName: "otp",
+    templateData: {
+      name,
+      otp,
+    },
+  });
+
+  return {
+    message: "OTP sent successfully",
+  };
+};
+
+const verifySignupOtp = async (payload: ISignupPayload) => {
+  const { email, otp } = payload;
+
+  const redisKey = `otp:signup:${email}`;
+
+  const storedOtp = await redisClient.get(redisKey);
+
+  if (!storedOtp) {
+    throw new AppError(400, "OTP expired or not found");
+  }
+
+  if (storedOtp !== otp) {
+    throw new AppError(400, "Invalid OTP");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser && existingUser.isVerified) {
+    throw new AppError(400, "User already verified");
+  }
+
+//   const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await prisma.user.update({
+    where: { email },
+    data: {
+    //   name,
+    //   email,
+    //   password: hashedPassword,
+      isVerified: true,
+    },
+  });
+
+  await redisClient.del(redisKey);
+
+  return {
+    message: "User registered successfully",
+    user,
+  };
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
@@ -179,4 +286,6 @@ export const AuthServices = {
   setPassword,
   forgotPassword,
   resetPassword,
+  sendSignupOtp,
+  verifySignupOtp,
 };

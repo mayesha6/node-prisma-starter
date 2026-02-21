@@ -23,7 +23,7 @@ const credentialsLogin = catchAsync(
 
       const userTokens = await createUserTokens(user);
 
-      const { password: pass, ...rest } = user.toObject();
+      const { password: pass, ...rest } = user;
 
       setAuthCookie(res, userTokens);
 
@@ -105,15 +105,18 @@ const changePassword = catchAsync(
   }
 );
 const resetPassword = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const decodedToken = req.user;
+  async (req: Request, res: Response) => {
+    const { resetToken, newPassword } = req.body;
 
-    await AuthServices.resetPassword(req.body, decodedToken as JwtPayload);
+    await AuthServices.resetPassword(
+      resetToken,
+      newPassword
+    );
 
     sendResponse(res, {
       success: true,
-      statusCode: httpStatus.OK,
-      message: "Password Changed Successfully",
+      statusCode: 200,
+      message: "Password reset successfully",
       data: null,
     });
   }
@@ -147,6 +150,40 @@ const forgotPassword = catchAsync(
     });
   }
 );
+const sendSignupOtp = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+
+    await AuthServices.sendSignupOtp(email);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "OTP sent to your email",
+      data: null,
+    });
+  }
+);
+
+const verifySignupOtp = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, otp } = req.body;
+
+    const user = await AuthServices.verifySignupOtp({ email, otp });
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.CREATED,
+      message: "User verified successfully",
+      data: {
+        id: user.user.id,
+        email: user.user.email,
+        isVerified: user.user.isVerified,
+      },
+    });
+  }
+);
+
 const googleCallbackController = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     let redirectTo = req.query.state ? (req.query.state as string) : "";
@@ -178,4 +215,6 @@ export const AuthControllers = {
   forgotPassword,
   changePassword,
   googleCallbackController,
+  sendSignupOtp,
+  verifySignupOtp,
 };
