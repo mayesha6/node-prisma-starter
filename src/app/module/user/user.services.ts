@@ -13,7 +13,6 @@ import type { IUser } from "./user.interface";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { userSearchableFields } from "./user.constant";
 
-// ================= CREATE USER =================
 const createUser = async (payload: IUser) => {
   const { email, password, ...rest } = payload;
 
@@ -50,7 +49,6 @@ const createUser = async (payload: IUser) => {
 };
 
 const getAllUsers = async (query: Record<string, string>) => {
-  // 👇 Strongly type where input
   const queryBuilder = new QueryBuilder<Prisma.UserWhereInput>(query);
 
   const prismaQuery = queryBuilder
@@ -61,7 +59,6 @@ const getAllUsers = async (query: Record<string, string>) => {
     .paginate()
     .build();
 
-  // Always exclude password if fields not manually selected
   if (!prismaQuery.select) {
     prismaQuery.select = {
       id: true,
@@ -93,7 +90,7 @@ const getAllUsers = async (query: Record<string, string>) => {
     meta,
   };
 };
-// ================= GET ME =================
+
 const getMe = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -115,7 +112,6 @@ const getMe = async (userId: string) => {
   return { data: user };
 };
 
-// ================= GET SINGLE USER =================
 const getSingleUser = async (id: string) => {
   const user = await prisma.user.findUnique({
     where: { id },
@@ -150,14 +146,12 @@ const updateUser = async (
     throw new AppError(httpStatus.NOT_FOUND, "User Not Found");
   }
 
-  // USER can update only themselves
   if (decodedToken.role === UserRole.USER) {
     if (userId !== decodedToken.userId) {
       throw new AppError(401, "You are not authorized");
     }
   }
 
-  // ADMIN cannot modify SUPER_ADMIN
   if (
     decodedToken.role === UserRole.ADMIN &&
     existingUser.role === UserRole.SUPER_ADMIN
@@ -165,7 +159,6 @@ const updateUser = async (
     throw new AppError(401, "You are not authorized");
   }
 
-  // USER cannot update role or status
   if (
     decodedToken.role === UserRole.USER &&
     (payload.role || payload.isActive || payload.isDeleted || payload.isVerified)
@@ -181,7 +174,6 @@ const updateUser = async (
   return updatedUser;
 };
 
-// ================= UPDATE MY PROFILE =================
 const updateMyProfile = async (
   userId: string,
   payload: any,
@@ -201,7 +193,6 @@ const updateMyProfile = async (
     throw new AppError(403, "You are not authorized");
   }
 
-  // hash password if updating
   if (payload.password) {
     payload.password = await bcryptjs.hash(
       payload.password,
@@ -209,7 +200,6 @@ const updateMyProfile = async (
     );
   }
 
-  // handle image upload
   if (file) {
     if (user.picture) {
       await deleteImageFromCLoudinary(user.picture);
