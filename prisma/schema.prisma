@@ -37,6 +37,19 @@ model Auth {
   userId     String
 }
 
+model Content {
+  id          String   @id @default(uuid())
+  type        ContentType
+  title       String
+  content     String   @db.Text
+  image    String? 
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 enum UserRole {
     USER
     ADMIN
@@ -54,3 +67,12 @@ enum AuthProvider {
   credentials
 }
 
+enum ContentType {
+  privacy
+  terms
+  about
+  refund
+  cookie
+  shipping
+  disclaimer
+}
