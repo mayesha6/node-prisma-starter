@@ -1,0 +1,9 @@
+enum ContentType {
+  PRIVACY
+  TERMS
+  ABOUT
+  REFUND
+  COOKIE
+  SHIPPING
+  DISCLAIMER
+}

@@ -1,0 +1,12 @@
+model Content {
+  id          String   @id @default(uuid())
+  type        ContentType
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  version     Int      @default(1)
+  isPublished Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
