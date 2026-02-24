@@ -22,6 +22,9 @@ model User {
 
   role       UserRole   @default(USER)
 
+  isSubscribed              Boolean           @default(false)
+  planExpiration            DateTime?
+
   auths      Auth[]
   Subscription Subscription[]
 

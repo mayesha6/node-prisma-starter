@@ -4,11 +4,12 @@ import {
 } from "../../utils/webhook";
 import Stripe from "stripe";
 import httpStatus from "http-status-codes";
-import { stripe } from "../../utils/stripe";
-import { Subscription } from "@prisma/client";
-import QueryBuilder from "../../builder/QueryBuilder";
 import prisma from "../../lib/prisma";
 import AppError from "../../errorHelpers/AppError";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { stripe } from "../../lib/stripe";
+import type { Prisma, Subscription } from "@prisma/client";
+
 const createSubscription = async (userId: string, planId: string) => {
   console.log("createSubscription - userId:", userId);
   return await prisma.$transaction(async (tx) => {
@@ -113,29 +114,45 @@ const createSubscription = async (userId: string, planId: string) => {
   });
 };
 const getAllSubscription = async (query: Record<string, any>) => {
-  const queryBuilder = new QueryBuilder(prisma.subscription, query);
-  const subscription = await queryBuilder
-    .search([""])
-    .paginate()
-    .fields()
-    .include({
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          profilePic: true,
-          role: true,
-          isSubscribed: true,
-          planExpiration: true,
-        },
-      },
-      plan: true,
-    })
-    .execute();
+    const queryBuilder = new QueryBuilder<Prisma.UserWhereInput>(query);
+      const prismaQuery = queryBuilder
+        .search([""])
+        .sort()
+        .fields()
+        .paginate()
+        .build();
 
-  const meta = await queryBuilder.countTotal();
-  return { meta, data: subscription };
+         if (!prismaQuery.select) {
+    prismaQuery.select = {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      isDeleted: true,
+      isVerified: true,
+      picture: true,
+      phone: true,
+      address: true,
+      createdAt: true,
+      updatedAt: true,
+      plan: true,
+    };
+  }
+
+    const [data, total] = await Promise.all([
+    prisma.user.findMany(prismaQuery),
+    prisma.user.count({
+      where: prismaQuery.where || {},
+    }),
+  ]);
+
+  const meta = queryBuilder.getMeta(total);
+
+  return {
+    data,
+    meta,
+  };
 };
 
 const getSingleSubscription = async (subscriptionId: string) => {
@@ -145,9 +162,8 @@ const getSingleSubscription = async (subscriptionId: string) => {
       user: {
         select: {
           id: true,
-          firstName:true,
-          lastName:true,
-          profilePic: true,
+          name:true,
+          picture: true,
           email: true,
           role: true,
           isSubscribed: true,
@@ -180,9 +196,8 @@ const getMySubscription = async (userId: string) => {
       user: {
         select: {
           id: true,
-          firstName:true,
-          lastName:true,
-          profilePic: true,
+          name:true,
+          picture: true,
           email: true,
           role: true,
           isSubscribed: true,
@@ -231,28 +246,6 @@ const deleteSubscription = async (subscriptionId: string) => {
   return null;
 };
 
-// const HandleStripeWebhook = async (event: Stripe.Event) => {
-//   try {
-//     switch (event.type) {
-//       case "payment_intent.succeeded":
-//         await handlePaymentIntentSucceeded(event.data.object);
-//         break;
-
-//       case "payment_intent.payment_failed":
-//         await handlePaymentIntentFailed(event.data.object);
-//         break;
-//       default:
-//         console.log(`Unhandled event type ${event.type}`);
-//     }
-
-//     return { received: true };
-//   } catch (error) {
-//     console.error("Error handling Stripe webhook:", error);
-//     throw new AppError(status.INTERNAL_SERVER_ERROR, "Webhook handling failed");
-//   }
-// };
-
-
 const HandleStripeWebhook = async (event: Stripe.Event) => {
   try {
     switch (event.type) {
@@ -285,6 +278,10 @@ const HandleStripeWebhook = async (event: Stripe.Event) => {
 const handleLifetimePaymentSuccess = async (session: Stripe.Checkout.Session) => {
   const { userId, planId } = session.metadata!;
   
+  if (!userId || !planId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Missing userId or planId in session metadata");
+  }
+
   await prisma.subscription.updateMany({
     where: {
       userId: userId,
