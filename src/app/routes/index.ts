@@ -5,6 +5,7 @@ import { OtpRoutes } from "../module/otp/otp.routes"
 import { ContentRoutes } from "../module/content/content.routes"
 import { FAQRoutes } from "../module/faq/faq.routes"
 import { ContactRoutes } from "../module/contact/contact.routes"
+import { PlanRoutes } from "../module/plan/plan.routes"
 
 
 export const router = Router()
@@ -33,6 +34,10 @@ const moduleRoutes = [
     {
         path: "/contact",
         route: ContactRoutes
+    },
+    {
+        path: "/plan",
+        route: PlanRoutes
     },
 
 ]
