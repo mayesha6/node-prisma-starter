@@ -40,6 +40,5 @@ router.delete(
   SubscriptionController.deleteSubscription
 );
 
-router.post("/stripe/webhook", SubscriptionController.handleStripeWebhook);
 
 export const SubscriptionRoutes = router;

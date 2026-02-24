@@ -15,8 +15,8 @@ const createSubscription = catchAsync(
   sendResponse(res, {
     success: true,
       statusCode: httpStatus.OK,
-      message: "OTP sent to your email",
-      data: null,
+      message: "Subscription created successfully. Complete the payment.",
+      data: result,
     });
 });
 
