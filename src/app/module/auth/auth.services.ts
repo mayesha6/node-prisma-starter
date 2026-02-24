@@ -110,7 +110,7 @@ const forgotPassword = async (email: string) => {
   });
 };
 
-const sendSignupOtp = async (email: string) => {
+const sendSignupOtp = async (email: string, name: string) => {
 
   const existingUser = await prisma.user.findUnique({
     where: { email },

@@ -152,9 +152,9 @@ const forgotPassword = catchAsync(
 );
 const sendSignupOtp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
+    const { email, name } = req.body;
 
-    await AuthServices.sendSignupOtp(email);
+    await AuthServices.sendSignupOtp(email, name);
 
     sendResponse(res, {
       success: true,
