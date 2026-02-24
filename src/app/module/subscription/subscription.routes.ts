@@ -9,26 +9,30 @@ const router = Router();
 
 router.post(
   "/create-subscription",
-  checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  checkAuth(UserRole.USER),
   validateRequest(SubscriptionValidation.SubscriptionValidationSchema),
   SubscriptionController.createSubscription
 );
 
 router.get(
   "/my-subscription",
-  checkAuth(),
+  checkAuth(...Object.values(UserRole)),
   SubscriptionController.getMySubscription
 );
 
-router.get("/", checkAuth(), SubscriptionController.getAllSubscription);
+router.get(
+    "/", 
+    checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER), 
+    SubscriptionController.getAllSubscription
+);
 
 router.get(
   "/:subscriptionId",
-  checkAuth(),
+  checkAuth(...Object.values(UserRole)),
   SubscriptionController.getSingleSubscription
 );
 
-router.put(
+router.patch(
   "/:subscriptionId",
   checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   SubscriptionController.updateSubscription
