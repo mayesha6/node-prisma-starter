@@ -9,7 +9,7 @@ export const planValidationSchema = z.object({
     amount: z.number().min(0, "Amount must be positive"),
     currency: z.string().length(3, "Currency must be 3-letter code").optional(),
     interval: z.enum(Object.values(Interval) as [string, ...string[]]).optional(),
-    intervalCount: z.number().int().positive("Interval count must be positive"),
+    intervalCount: z.number().int().positive("Interval count must be positive").optional(),
     freeTrialDays: z.number().int().nonnegative().optional().default(0),
     active: z.boolean().default(true).optional(),
   }),
