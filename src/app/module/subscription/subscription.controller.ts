@@ -1,11 +1,9 @@
-
 import type { Request, NextFunction, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { SubscriptionServices } from "./subscription.services";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status-codes";
 import type { JwtPayload } from "jsonwebtoken";
-import { CLIENT_RENEG_LIMIT } from "tls";
 
 const createSubscription = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {

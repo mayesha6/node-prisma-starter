@@ -3,6 +3,7 @@ import httpStatus from "http-status-codes";
 import { PaymentStatus, Interval } from "@prisma/client";
 import AppError from "../errorHelpers/AppError";
 import prisma from "../lib/prisma";
+import { stripe } from "../lib/stripe";
 
 
 const calculateEndDate = (
@@ -119,5 +120,6 @@ const handlePaymentIntentFailed = async (
     },
   });
 };
+
 
 export { handlePaymentIntentSucceeded, handlePaymentIntentFailed };
