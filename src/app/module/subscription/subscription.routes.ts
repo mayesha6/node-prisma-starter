@@ -41,7 +41,7 @@ router.patch(
 router.delete(
   "/:subscriptionId",
   checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  SubscriptionController.deleteSubscription
+  SubscriptionController.deleteSubscription 
 );
 
 

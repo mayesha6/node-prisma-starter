@@ -9,6 +9,7 @@ import AppError from "../../errorHelpers/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { stripe } from "../../lib/stripe";
 import type { Prisma, Subscription } from "@prisma/client";
+import { envVars } from "../../config/env";
 
 const createSubscription = async (userId: string, planId: string) => {
     console.log("createSubscription - userId:", userId);
@@ -113,6 +114,8 @@ const createSubscription = async (userId: string, planId: string) => {
         };
     });
 };
+
+
 const getAllSubscription = async (query: Record<string, any>) => {
     const queryBuilder = new QueryBuilder<Prisma.UserWhereInput>(query);
     const prismaQuery = queryBuilder
@@ -137,17 +140,17 @@ const getAllSubscription = async (query: Record<string, any>) => {
             createdAt: true,
             updatedAt: true,
             // plan: true,
-             Subscription: {
-            select: {
-                id: true,
-                planId: true,
-                startDate: true,
-                endDate: true,
-                amount: true,
-                paymentStatus: true,
-                plan: true, // include the related plan
+            Subscription: {
+                select: {
+                    id: true,
+                    planId: true,
+                    startDate: true,
+                    endDate: true,
+                    amount: true,
+                    paymentStatus: true,
+                    plan: true, // include the related plan
+                },
             },
-        },
         };
     }
 
@@ -316,6 +319,7 @@ const handleLifetimePaymentSuccess = async (session: Stripe.Checkout.Session) =>
 
     console.log("✅ Lifetime payment completed for user:", userId);
 };
+
 
 export const SubscriptionServices = {
     getMySubscription,
